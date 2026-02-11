@@ -1,2 +1,3 @@
-twilio.com
+api.twilio.com
+tsock.us1.twilio.com
 
