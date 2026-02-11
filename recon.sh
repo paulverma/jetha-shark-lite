@@ -21,15 +21,14 @@ while read -r TARGET; do
   subfinder -d "$TARGET" -all -silent -o subfinder.txt || true
 
   echo "[*] httpx live hosts"
-  cat subfinder.txt | httpx -silent -sc -cl -title -tech-detect -o livefull.txt || true
+  cat subfinder.txt | httpx -silent -sc -cl -title -tech-detect -rl 50 -o livefull.txt || true
   cat livefull.txt | awk '{print $1}' | sort -u > liveurls.txt || true
 
-  echo "[*] waybackurls + gau"
+  echo "[*] waybackurls only (no gau)"
   cat liveurls.txt | waybackurls | sort -u > waybackurls.txt || true
-  cat liveurls.txt | gau --threads 3 --subs | sort -u > gauurls.txt || true
 
   echo "[*] combine + uro"
-  cat waybackurls.txt gauurls.txt | uro | sort -u > allurls.txt || true
+  cat waybackurls.txt | uro | sort -u > allurls.txt || true
 
   echo "[*] param urls + gf"
   grep '?' allurls.txt | sort -u > paramurls.txt || true
@@ -43,12 +42,12 @@ while read -r TARGET; do
   echo "[*] nuclei lite"
   nuclei -l ../recon/liveurls.txt \
     -severity critical,high,medium \
-    -rate-limit 20 -c 10 \
+    -rate-limit 15 -c 5 \
     -o nuclei.txt || true
 
-  echo "[*] dalfox on gfxss"
+  echo "[*] dalfox on gfxss (low threads)"
   if [ -s ../recon/gfxss.txt ]; then
-    cat ../recon/gfxss.txt | dalfox pipe --silence -w 30 -o xss_dalfox.txt || true
+    cat ../recon/gfxss.txt | dalfox pipe --silence -w 10 -o xss_dalfox.txt || true
   fi
 
   echo "Done for $TARGET"
