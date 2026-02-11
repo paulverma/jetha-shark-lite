@@ -11,10 +11,13 @@ while read -r TARGET; do
   [ -z "$TARGET" ] && continue
   echo "===== TARGET: $TARGET ====="
 
-  TD="$OUTDIR/$TARGET"
+  SAFE_TARGET=$(echo "$TARGET" | tr '/:' '_')
+  TD="$OUTDIR/$SAFE_TARGET"
   mkdir -p "$TD/recon" "$TD/vulns"
 
   cd "$TD/recon"
+  ...
+
 
   echo "[*] Subfinder: $TARGET"
   subfinder -d "$TARGET" -all -silent -o subfinder.txt || true
