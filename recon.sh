@@ -13,8 +13,12 @@ while read -r TARGET; do
 
   SAFE_TARGET=$(echo "$TARGET" | tr '/:' '_')
   TD="$OUTDIR/$SAFE_TARGET"
-  mkdir -p "$TD/recon" "$TD/vulns"
 
+  # Make sure both dirs always exist
+  mkdir -p "$TD/recon"
+  mkdir -p "$TD/vulns"
+
+  # --- RECON PART ---
   cd "$TD/recon"
 
   echo "[*] Subfinder: $TARGET"
@@ -37,6 +41,9 @@ while read -r TARGET; do
   cat paramurls.txt | gf ssrf  > gfssrf.txt  || true
   cat paramurls.txt | gf idor  > gfidor.txt  || true
 
+  cd - >/dev/null 2>&1
+
+  # --- VULNS PART ---
   cd "$TD/vulns"
 
   echo "[*] nuclei lite"
@@ -51,7 +58,7 @@ while read -r TARGET; do
   fi
 
   echo "Done for $TARGET"
-  cd -
+  cd - >/dev/null 2>&1
 done < targets.txt
 
 echo "[*] Recon finished, results in $OUTDIR"
