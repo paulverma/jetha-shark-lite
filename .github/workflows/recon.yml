@@ -1,0 +1,65 @@
+name: Jetha Shark Lite Recon
+
+on:
+  schedule:
+    - cron: "0 0 * * *"   # daily 00:00 UTC
+  workflow_dispatch:      # manually run from UI
+
+jobs:
+  recon:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install dependencies (Go, tools)
+        run: |
+          sudo apt update
+          sudo apt install -y git curl jq python3-pip
+          
+          # Go
+          wget https://go.dev/dl/go1.21.6.linux-amd64.tar.gz
+          sudo rm -rf /usr/local/go
+          sudo tar -C /usr/local -xzf go1.21.6.linux-amd64.tar.gz
+          echo "export PATH=\$PATH:/usr/local/go/bin:\$HOME/go/bin" >> $GITHUB_ENV
+          
+          # Python tools
+          pip3 install uro arjun
+          
+          # Wait for env
+          source $GITHUB_ENV || true
+          
+          # Go tools
+          /usr/local/go/bin/go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+          /usr/local/go/bin/go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
+          /usr/local/go/bin/go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+          /usr/local/go/bin/go install -v github.com/tomnomnom/waybackurls@latest
+          /usr/local/go/bin/go install -v github.com/lc/gau/v2/cmd/gau@latest
+          /usr/local/go/bin/go install -v github.com/tomnomnom/qsreplace@latest
+          /usr/local/go/bin/go install -v github.com/tomnomnom/gf@latest
+          /usr/local/go/bin/go install -v github.com/hahwul/dalfox/v2@latest
+          
+          echo "$HOME/go/bin" >> $GITHUB_PATH
+
+      - name: Install gf-patterns
+        run: |
+          git clone https://github.com/1ndianl33t/Gf-Patterns ~/.gf
+          mkdir -p ~/.config/gf
+          cp ~/.gf/*.json ~/.config/gf
+
+      - name: Update nuclei templates (lite)
+        run: |
+          mkdir -p "$HOME/nuclei-templates"
+          nuclei -ut -ud "$HOME/nuclei-templates" || true
+
+      - name: Run recon script
+        run: |
+          chmod +x recon.sh
+          ./recon.sh
+
+      - name: Upload results artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: recon-results
+          path: results
