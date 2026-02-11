@@ -16,8 +16,6 @@ while read -r TARGET; do
   mkdir -p "$TD/recon" "$TD/vulns"
 
   cd "$TD/recon"
-  ...
-
 
   echo "[*] Subfinder: $TARGET"
   subfinder -d "$TARGET" -all -silent -o subfinder.txt || true
